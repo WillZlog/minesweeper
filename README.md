@@ -1,6 +1,6 @@
 # Mine Sweeper
 
-See the full analysis here: [View Results](results.md)
+See the full analysis here: [View Results](RESULTS.md)
 
 ## Table of Contents
 
