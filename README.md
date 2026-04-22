@@ -1,8 +1,8 @@
-# Project Title
+# Mine Sweeper
 
 ## Table of Contents
 
-- [Project Title](#project-title)
+- [Mine Sweeper](#mine-sweeper)
   - [Table of Contents](#table-of-contents)
   - [About ](#about-)
   - [Getting Started ](#getting-started-)
