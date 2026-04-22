@@ -450,6 +450,7 @@ data = [
     datetime.now().isoformat(),
     SMARTBOT_VERSION,
 ]
-with open("dataSmart.csv", "a+", newline="") as file:
+
+with open("data/dataSmart.csv", "a+", newline="") as file:
     writer = csv.writer(file)
     writer.writerow(data)
