@@ -1,5 +1,7 @@
 # Mine Sweeper
 
+See the full analysis here: [View Results](results.md)
+
 ## Table of Contents
 
 - [Mine Sweeper](#mine-sweeper)
