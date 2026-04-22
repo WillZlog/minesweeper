@@ -429,23 +429,23 @@ def simulate_bot(
     return wins, (totalTime / tries)
 
 
-# * EXAMPLE USE, STORES DATA IN dataSmart.csv
+# * EXAMPLE USE, STORES DATA IN data/dataSmart.csv
 TRIES = 10000
 SMARTBOT_VERSION = 2
 RANDOMBOT_VERSION = 1
 TIMESTAMP = None
+SIDELENGTH = 10
+NUMMINES = 10
+NEIGHBORS = build_neighbors(SIDELENGTH)
 
+wins, avgTime = simulate_bot(smartishBot, SIDELENGTH, NUMMINES, TRIES, NEIGHBORS)
 
-SideLength = 10
-NumMines = 10
-neighbors = build_neighbors(SideLength)
-wins, avgTime = simulate_bot(smartishBot, SideLength, NumMines, TRIES, neighbors)
 data = [
-    SideLength**2,
+    SIDELENGTH**2,
     TRIES,
     wins,
-    NumMines,
-    (NumMines / SideLength**2) * 100,
+    NUMMINES,
+    (NUMMINES / SIDELENGTH**2) * 100,
     avgTime,
     datetime.now().isoformat(),
     SMARTBOT_VERSION,
