@@ -34,7 +34,11 @@ Use it to test bots, and run tests yk.
 
 ## Testing <a name = "testing"></a>
 
-in order to run tests, make sure pytest in installed and run 
+in order to run tests, make sure pytest is installed with
+```
+pip install pytest
+```
+and run 
 ```
 pytest
 ```
