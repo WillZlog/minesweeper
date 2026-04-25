@@ -479,27 +479,28 @@ def simulate_bot(
 
 
 # * EXAMPLE USE, STORES DATA IN data/dataSmart.csv
-TRIES = 10000
-SMARTBOT_VERSION = 2
-RANDOMBOT_VERSION = 1
-TIMESTAMP = None
-SIDELENGTH = 10
-NUMMINES = 10
-NEIGHBORS = build_neighbors(SIDELENGTH)
+if __name__ == "__main__":
+    TRIES = 10000
+    SMARTBOT_VERSION = 2
+    RANDOMBOT_VERSION = 1
+    TIMESTAMP = None
+    SIDELENGTH = 10
+    NUMMINES = 10
+    NEIGHBORS = build_neighbors(SIDELENGTH)
 
-wins, avgTime = simulate_bot(smartishBot, SIDELENGTH, NUMMINES, TRIES, NEIGHBORS)
+    wins, avgTime = simulate_bot(smartishBot, SIDELENGTH, NUMMINES, TRIES, NEIGHBORS)
 
-data = [
-    SIDELENGTH**2,
-    TRIES,
-    wins,
-    NUMMINES,
-    (NUMMINES / SIDELENGTH**2) * 100,
-    avgTime,
-    datetime.now().isoformat(),
-    SMARTBOT_VERSION,
-]
+    data = [
+        SIDELENGTH**2,
+        TRIES,
+        wins,
+        NUMMINES,
+        (NUMMINES / SIDELENGTH**2) * 100,
+        avgTime,
+        datetime.now().isoformat(),
+        SMARTBOT_VERSION,
+    ]
 
-with open("data/dataSmart.csv", "a+", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerow(data)
+    with open("data/dataSmart.csv", "a+", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(data)
