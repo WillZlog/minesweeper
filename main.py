@@ -179,6 +179,9 @@ def random_bot(
     return state["won"], timeDelta
 
 
+# hello there!
+
+
 def apply_reveal(
     index: int,
     board: list,
