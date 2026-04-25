@@ -15,4 +15,4 @@ jobs:
           pip install pytest
           # Add any other dependencies your code needs here
       - name: Run pytest
-        run: pytest
+        run: python -m pytest
