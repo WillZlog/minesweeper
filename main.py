@@ -195,9 +195,29 @@ def apply_reveal(
         return "break"
     elif result == 0:
         flood_fill(index, board, hidden, state, neighbors, numMines, clues)
+        if state["game_over"]:
+            return "break"
     elif result is not None:
         clues[index] = result
     return result
+
+
+def revealSafeTiles(
+    tiles: list | set,
+    hidden: list,
+    board: list,
+    state: dict,
+    numMines: int,
+    clues: dict,
+    neighbors: list,
+):
+    for indexT in tiles:
+        if hidden[indexT]:
+            returnValue = apply_reveal(
+                indexT, board, hidden, state, numMines, clues, neighbors
+            )
+            if returnValue == "break":
+                return "break"
 
 
 def deduce(
@@ -206,12 +226,10 @@ def deduce(
     flagged: set,
     updates: list,
     safe: set,
-    board: list,
-    state: dict,
-    numMines: int,
     neighbors: list,
 ):
-    """helper function to smartishBot(), updates flagging for flagged mines and flagged safe squares, and then reveals safe squares"""
+    """helper function to smartishBot(), updates flagging for flagged mines and flagged safe squares"""
+
     for indexV, value in clues.items():
         flaggedNeighbor = 0
         totalHidden = []
@@ -232,13 +250,6 @@ def deduce(
                 if neighbor not in safe:
                     safe.add(neighbor)
                     updates.append(neighbor)
-    for indexT in safe:
-        if hidden[indexT]:
-            returnValue = apply_reveal(
-                indexT, board, hidden, state, numMines, clues, neighbors
-            )
-            if returnValue == "break":
-                break
 
 
 def make_heuristic(
@@ -264,46 +275,80 @@ def make_heuristic(
     Returns:
         string | int: returns either "continue" as a sign to continue in smartishBot(), or the index to guess next
     """
-    if len(updates) == 0:
-        for i in range(board_size):
-            total = 0
-            if hidden[i]:
-                if i not in flagged:
-                    for neighbor in neighbors[i]:
-                        if neighbor in clues:
-                            flaggedNeighborSum = 0
-                            totalNeighbor = 0
-                            for neighborsNeighbor in neighbors[neighbor]:
-                                if hidden[neighborsNeighbor]:
-                                    if neighborsNeighbor not in flagged:
-                                        totalNeighbor += 1
-                                    else:
-                                        flaggedNeighborSum += 1
-                            if totalNeighbor != 0:
-                                total += (
-                                    clues[neighbor] - flaggedNeighborSum
-                                ) / totalNeighbor
-                    scoreValue[i] = total
+    # * no new information was found from deduction,
+    # * so the bot has to guess using the heuristic.
+    for i in range(board_size):
+
+        total = 0
+
+        # * only score tiles that are still hidden
+        if hidden[i]:
+
+            # * do not score tiles already flagged as mines
+            if i not in flagged:
+
+                # * look at all clue tiles neighboring this candidate tile i
+                for neighbor in neighbors[i]:
+                    if neighbor in clues:
+
+                        # * flaggedNeighborSum = how many flagged mines
+                        # * are already around this clue tile
+                        flaggedNeighborSum = 0
+
+                        # * totalNeighbor = how many hidden, unflagged tiles
+                        # * are still unresolved around this clue tile
+                        totalNeighbor = 0
+
+                        # * scan the clue tile's neighbors
+                        for neighborsNeighbor in neighbors[neighbor]:
+                            if hidden[neighborsNeighbor]:
+                                if neighborsNeighbor not in flagged:
+                                    totalNeighbor += 1
+                                else:
+                                    flaggedNeighborSum += 1
+
+                            # * if there are still unresolved tiles around this clue,
+                            # * add this clue's risk contribution to tile i.
+                            #
+                            # (clue value - already flagged mines)
+                            # ------------------------------------
+                            # unresolved hidden neighbors
+                            #
+                            # * Lower total score means safer guess.
+                        if totalNeighbor != 0:
+                            total += (
+                                clues[neighbor] - flaggedNeighborSum
+                            ) / totalNeighbor
+
+                    # * store the final heuristic score for tile i
+                scoreValue[i] = total
             else:
+                # * revealed tiles should never be chosen, so give them
+                # * a large dummy score
                 scoreValue[i] = 9
-        sorted_dict = dict(sorted(scoreValue.items(), key=lambda item: item[1]))
-        best = []
-        minValue = 0
-        x = 0
-        for key, valueT in sorted_dict.items():
-            if x == 0:
+
+        # * sort all candidate tiles by score, lowest first
+    sorted_dict = dict(sorted(scoreValue.items(), key=lambda item: item[1]))
+    best = []
+    minValue = 0
+    x = 0
+    # * collect all tiles tied for the lowest score
+    for key, valueT in sorted_dict.items():
+        if x == 0:
+            # * first tile has the minimum score because dict is sorted
+            best.append(key)
+            minValue = valueT
+        else:
+            # * add all other tiles with the same minimum score
+            if valueT == minValue:
                 best.append(key)
-                minValue = valueT
             else:
-                if valueT == minValue:
-                    best.append(key)
-                else:
-                    break
-            x += 1
-        index = best[random.randrange(len(best))]
-        return index
-    else:
-        return "continue"
+                # * stop once scores get worse than the minimum
+                break
+        x += 1
+        # * randomly choose one of the safest-scoring tiles
+    index = best[random.randrange(len(best))]
+    return index
 
 
 def smartishBot(sideLength: int, numMines: int, neighbors: list):
@@ -364,32 +409,33 @@ def smartishBot(sideLength: int, numMines: int, neighbors: list):
         # * key is index, value is computed score
         # * is used to make heuristic when needed in make_heuristic()
 
-        # TODO: Make the score calculation a lot more robust, right now only factors in one clue nearby to compute score
-
         while True:
             updates = []
             # * Updates is a list used to keep track of any updates made during this loop, if updates isnt empty, it repeats the loop
             # * updates is popualated if a tile is marked safe or if a tile is flagged
+            deduce(clues, hidden, flagged, updates, safe, neighbors)
 
-            deduce(
-                clues, hidden, flagged, updates, safe, board, state, numMines, neighbors
-            )
-            # * Does the thinking and flagging of safe and mines, and then reveals all flagged safe squares
+            if len(safe) > 0:
+                if (
+                    revealSafeTiles(
+                        safe, hidden, board, state, numMines, clues, neighbors
+                    )
+                    == "break"
+                ):
+                    break
 
             safe.clear()
+
+            if updates:
+                continue
 
             index = make_heuristic(
                 updates, board_size, hidden, flagged, clues, neighbors, scoreValue
             )
             # * if/when necesary, will make a guess using calculated scores in make_heuristic()
-            # * returns either "continue" or the index of the next square to be guessed
 
-            if index == "continue":
-                continue
-            # * if updates were made, continue the loop and recheck
-            else:
-                break
-            # * else break the loop and make the next guess
+            break
+            # *  break the loop and make the next guess
 
     end = time.perf_counter()  # * end timer
     timeDelta = end - start  # * calc how much time has passed
