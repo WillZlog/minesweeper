@@ -254,6 +254,58 @@ def deduce(
                     safe.add(neighbor)
                     updates.append(neighbor)
 
+    clueTilePairs = {}
+    for clue, numMine in clues.items():
+        remainingMines = numMine
+        possible = set()
+        for neighbor in neighbors[clue]:
+            if hidden[neighbor]:
+                if neighbor not in flagged:
+                    possible.add(neighbor)
+                else:
+                    remainingMines -= 1
+        clueTilePairs[clue] = {"possible": possible, "numMines": remainingMines}
+
+    for clueA, valuesA in clueTilePairs.items():
+        possibleA = valuesA["possible"]
+        remainingMinesA = valuesA["numMines"]
+        for clueB, valuesB in clueTilePairs.items():
+            possibleB = valuesB["possible"]
+            remainingMinesB = valuesB["numMines"]
+            if clueA == clueB:
+                continue
+            else:
+                if possibleA.issubset(possibleB):
+                    diff = possibleB - possibleA
+                    leftOverMines = remainingMinesB - remainingMinesA
+                    if leftOverMines < 0 or leftOverMines > len(diff):
+                        raise ValueError()
+                    if leftOverMines == 0:
+                        for tile in diff:
+                            if tile not in safe:
+                                safe.add(tile)
+                                updates.append(tile)
+                    elif len(diff) == leftOverMines:
+                        for mine in diff:
+                            if mine not in flagged:
+                                flagged.add(mine)
+                                updates.append(mine)
+                elif possibleB.issubset(possibleA):
+                    diff = possibleA - possibleB
+                    leftOverMines = remainingMinesA - remainingMinesB
+                    if leftOverMines < 0 or leftOverMines > len(diff):
+                        raise ValueError()
+                    if leftOverMines == 0:
+                        for tile in diff:
+                            if tile not in safe:
+                                safe.add(tile)
+                                updates.append(tile)
+                    elif len(diff) == leftOverMines:
+                        for mine in diff:
+                            if mine not in flagged:
+                                flagged.add(mine)
+                                updates.append(mine)
+
 
 def make_heuristic(
     updates: list,
@@ -281,7 +333,6 @@ def make_heuristic(
     # * no new information was found from deduction,
     # * so the bot has to guess using the heuristic.
     for i in range(board_size):
-
         total = 0
 
         # * only score tiles that are still hidden
@@ -481,11 +532,11 @@ def simulate_bot(
 # * EXAMPLE USE, STORES DATA IN data/dataSmart.csv
 if __name__ == "__main__":
     TRIES = 10000
-    SMARTBOT_VERSION = 2
+    SMARTBOT_VERSION = 3
     RANDOMBOT_VERSION = 1
     TIMESTAMP = None
-    SIDELENGTH = 10
-    NUMMINES = 10
+    SIDELENGTH = 6
+    NUMMINES = 11
     NEIGHBORS = build_neighbors(SIDELENGTH)
 
     wins, avgTime = simulate_bot(smartishBot, SIDELENGTH, NUMMINES, TRIES, NEIGHBORS)
