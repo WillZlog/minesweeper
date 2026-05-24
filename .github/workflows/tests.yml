@@ -13,7 +13,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pytest
-          # Add any other dependencies your code needs here
       - name: Create data directory
         run: mkdir -p data
       - name: Run pytest
